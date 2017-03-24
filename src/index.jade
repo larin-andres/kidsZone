@@ -1,0 +1,45 @@
+doctype html
+//html(lang="ru" ng-app="app")
+html(lang="ru" )
+	head
+
+		//include _gl_tag_head.jade
+		include _head.jade
+	body
+		//(ng-cloak)
+		//include _gl_tag_body.jade
+		//include _preloader.jade
+		include _header.jade
+
+		//ui-view(autoscroll)
+		#wrapper
+			#map
+
+			form( name='client')
+				p Please, input your info in the field below.
+				label Name
+					input( type='text' class='clientName' name='clientName')
+				label Type
+					input( type='text' class='clientType' name='clientType')
+				label Address
+					input( type='text' class='guestAddress' name='guestAddress')
+				label Telephone
+					input( type='text' class='guestTelephone' name='guestTelephone')
+				label Email
+					input( type='text' class='guestEmail' name='guestEmail')
+				label Title
+					input( type='text' class='guestTitle' name='guestTitle')
+				label Comfortable
+					input( type='text' class='guestComfortable' name='guestComfortable')
+				label Square
+					input( type='text' class='guestSquare' name='guestSquare')
+				label Servise
+					input( type='text' class='guestServise' name='guestServise')
+				label Description
+					input( type='text' class='guestDescription' name='guestDescription')
+
+				button send
+
+		include _footer.jade
+		include _script.jade
+
