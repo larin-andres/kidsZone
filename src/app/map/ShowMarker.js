@@ -196,7 +196,7 @@ res
     })
     .then(function (markerListCurrent) {
         markerListCurrent.changeMarker('typeInfo', 'Pizzeria', markerListCurrent, undefined, 'Pizza Bar', null);
-        console.log(markerListCurrent);
+        // console.log(markerListCurrent);
         return Promise.resolve(markerListCurrent);
     })
     .then(function(markerListCurrent){
