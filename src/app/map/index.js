@@ -1,8 +1,8 @@
-require('./SetMap');
+// require('./SetMap');
 // require('./ShowMarker');
-// require('./MapService');
-require('./MaxMap');
+require('./MapComponents');
+// require('./MaxMap');
 
-var infoWind = new google.maps.InfoWindow();
+// var infoWind = new google.maps.InfoWindow();
 
-module.exports.infoW = infoWind;
+// module.exports.infoW = infoWind;
