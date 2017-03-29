@@ -93,113 +93,13 @@ var markerAdded = new AddMarker();
 emitter.on('addMarker', markerAdded.setMarker);
 emitter.on('addMarkerClick', markerAdded.setMarkerClick);
 
-// var map = require('./SetMap');
-// var setMarkerId = require('./setMarkerId');
-//
-// var markerTmpl = require('./_marker_common.jade');
-//
-// //create info wind in global
-// var infoWind = new google.maps.InfoWindow();
-//
-// var Emitter = require('../index');
-// var emitter = new Emitter;
-//
-// //generate mark time
-// var setIdTime = function () {
-//     return moment().valueOf()
-// };
-// var markerListCurrent = [];
-//
-//
-//
-// var createMarker = function(position, name, type, review,comfort, square, service) {
-//     var marker = new google.maps.Marker({
-//         // random ending to avoid replacing the same mark time id
-//         id: setIdTime() + Math.floor(Math.random() * 128)
-//         , lat: position.lat
-//         , lng: position.lng
-//         , position: position
-//         , map: map
-//         , title: name
-//         , nameInfo: name
-//         , typeInfo: type
-//         , comfortableInfo: comfort
-//         , squareInfo: square
-//         , serviceInfo: service
-//         , reviewInfo: review
-//     });
-//
-//     var createInfoWind = function () {
-//         marker.addListener('click', function() {
-//             infoWind.setContent(markerTmpl({
-//                 name: this.nameInfo
-//                 , type: this.typeInfo
-//                 , field: {
-//                     comfortable: this.comfortableInfo
-//                     , square: this.squareInfo
-//                     , service: this.serviceInfo
-//                     , review: this.reviewInfo
-//                 }
-//             }));
-//             infoWind.open(map, this);
-//         });
-//     };
-//     createInfoWind();
-//     markerListCurrent[marker.id] = marker;
-//
-//     return markerListCurrent;
-// };
-//
-// //set marker from input data
-// var showMarker = function(markerArrInput){
-//     markerArrInput.forEach(function (val){
-//         createMarker(val.position, val.name, val.type, val.review, val.field.comfortable, val.field.square, val.field.service);
-//     })
-//     return markerListCurrent;
-// }
-
-// AddMarker = function() {
-//     this.setMarker = function (position, name, type, review, comfort, square, service){
-//         createMarker(position, name, type, review, comfort, square, service);
-//         return markerListCurrent;
-//     };
-//
-//     this.setMarkerClick = function (position, name, type, review,comfort, square, service) {
-//         map.addListener('click', function (e) {
-//             position = e.latLng;
-//             createMarker(position, name, type, review, comfort, square, service);
-//             // console.log(position.lat());
-//             console.log(markerListCurrent);
-//             return markerListCurrent;
-//         });
-//     }
-// }
-// var markerAdded = new AddMarker();
-// emitter.on('addMarker', markerAdded.setMarker);
-// emitter.on('addMarkerClick', markerAdded.setMarkerClick);
-//
-
-var deleteMarker = function (propName, propVal, removeArr) {
-    if (removeArr === undefined) {
-        for (var item in markerListCurrent) {
-            if (markerListCurrent[item][propName] == propVal) {
-                markerListCurrent[item].setMap(null);
-                delete markerListCurrent[item];
-            }
+var deleteMarker = function (propName, propVal) {
+    for (var item in markerListCurrent) {
+        if (markerListCurrent[item][propName] == propVal) {
+            markerListCurrent[item].setMap(null);
+            delete markerListCurrent[item];
         }
-    } else if (propName === undefined || propName === undefined ) {
-        removeArr.forEach(function(elemRemoveArr){
-            for ( var elem in elemRemoveArr) {
-                for (var item in markerListCurrent){
-                    if (markerListCurrent[item][elem] == elemRemoveArr[elem]) {
-                        markerListCurrent[item].setMap(null);
-                        delete markerListCurrent[item];
-                    }
-                }
-            }
-        })
     }
-
     return markerListCurrent;
 };
 emitter.on('deleteMarker', deleteMarker);
@@ -274,7 +174,7 @@ res
         return Promise.resolve(markerListCurrent)
     })
     .then(function (markerListCurrent) {
-        emitter.emit('deleteMarker', 'title', 'The Little pony', undefined);
+        emitter.emit('deleteMarker', 'title', 'The Little pony');
         // emitter.emit('deleteMarker', 'comfortableInfo', 5, markerListCurrent);
         console.log(markerListCurrent)
         return Promise.resolve(markerListCurrent);
@@ -291,8 +191,7 @@ res
         return Promise.resolve(markerListCurrent)
     })
 .then(function (markerListCurrent) {
-    emitter.emit('deleteMarker', undefined, undefined, [{'title': 'Varenik`s'}, {'title': 'Entertainment'}, {'title': 'Kids'}, {'serviceInfo': '3'}, {'serviceInfo': '4'}]);
-    // emitter.emit('deleteMarker','title', 'Porter pub', markerListCurrent);
+   emitter.emit('deleteMarker','title', 'Porter pub', markerListCurrent);
     console.log(markerListCurrent)
     return Promise.resolve(markerListCurrent);
 })
