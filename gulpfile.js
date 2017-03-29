@@ -38,9 +38,9 @@ gulp.task('webpack-dev-server', function( done) {
 		//, inline: true
 		, stats: 'minimal'//{ colors: true }
 		//, noInfo: true
-		, proxy: {
-			'*': 'http://localhost:3000' //на стандартный порт Express
-		}
+		// , proxy: {
+		// 	'*': 'http://localhost:3000' //на стандартный порт Express
+		// }
 		, publicPath: _webpackConfig.output.publicPath
 		, contentBase: _webpackConfig.context + '/**/*.*'
 		, watchContentBase: true

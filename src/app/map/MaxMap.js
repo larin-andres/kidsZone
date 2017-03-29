@@ -43,9 +43,9 @@ var createMarker = function(position, name, type, review,comfort, square, servic
     createInfoWind();
     return marker
 };
-socket.on('connection', function(data){
-    console.log(data);
-})
+// socket.on('connection', function(data){
+//     console.log(data);
+// })
 var AddMarker = function () {
     var newMarkerForm = {};
     /* for (var key in marker) {
@@ -59,14 +59,14 @@ var AddMarker = function () {
 
     var newMarker = createMarker ({lat: 50.446246, lng: 30.520878}, 'The Little pony', 'Cafe', 'Amazing', '5', '42', '5');
     console.log(newMarker)
-    socket.emit('AddMarker', newMarker, function (successful) {
-        console.log("addition was succsful: " + successful);
-        if (!successful) {
-            return Promise.reject(successful);
-        } else {
-            return Promise.resolve(successful);
-        }
-    });
+    // socket.emit('AddMarker', newMarker, function (successful) {
+    //     console.log("addition was succsful: " + successful);
+    //     if (!successful) {
+    //         return Promise.reject(successful);
+    //     } else {
+    //         return Promise.resolve(successful);
+    //     }
+    // });
 }
 // AddMarker();
 module.exports.AddNewMarker = AddMarker;
