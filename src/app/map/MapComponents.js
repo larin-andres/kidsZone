@@ -1,12 +1,10 @@
 var map = require('./SetMap');
 var markerTmpl = require('./_marker_common.jade');
 
-var showMarkers = require('./ShowMarkers');
-var infoWind = showMarkers.infoWind;
-var markerListCurrent = showMarkers.markerListCurrent;
+var infoWind = require('./ShowMarkers').infoWind;
+var markerListCurrent = require('./ShowMarkers').markerListCurrent;
 
-var Emitter = require('../index');
-var emitter = new Emitter;
+var emitter = require('../index').emitter;
 
 //generate mark time
 var setIdTime = function () {
@@ -14,8 +12,11 @@ var setIdTime = function () {
 };
 
 AddMarker = function () {
+    //take out marker to send to Db and receive from users
+    var that = this;
+
     this.setMarker = function (position, name, type, review, comfort, square, service) {
-        var marker = new google.maps.Marker({
+        that.marker = new google.maps.Marker({
             // random ending to avoid replacing the same mark time id
             id: setIdTime() + Math.floor(Math.random() * 128)
             , position: position
@@ -30,7 +31,7 @@ AddMarker = function () {
             , reviewInfo: review
         });
         var createInfoWind = function () {
-            marker.addListener('click', function () {
+            that.marker.addListener('click', function () {
                 infoWind.setContent(markerTmpl({
                     name: this.nameInfo
                     , type: this.typeInfo
@@ -45,15 +46,15 @@ AddMarker = function () {
             });
         };
         createInfoWind();
-        marker.setMap(map);
-        markerListCurrent[marker.id] = marker;
+        that.marker.setMap(map);
+        markerListCurrent[that.marker.id] = that.marker;
 
         return markerListCurrent;
     };
 
     this.setMarkerClick = function (name, type, review, comfort, square, service) {
         map.addListener('click', function (e) {
-            var marker = new google.maps.Marker({
+            marker = new google.maps.Marker({
                 id: setIdTime() + Math.floor(Math.random() * 128)
                 , position: e.latLng
                 , lat: e.latLng.lat()
@@ -83,15 +84,35 @@ AddMarker = function () {
             };
             createInfoWind();
             marker.setMap(map);
+
+            //send marker to DB
+            // emitter.on('addMarker', getMarkerToDb(marker));
+            emitter.on('addMarker2', function(){
+                console.log('em work');
+            });
+
             markerListCurrent[marker.id] = marker;
-        });
-        console.log(markerListCurrent);
+        })
         return markerListCurrent;
     }
 }
 var markerAdded = new AddMarker();
-emitter.on('addMarker', markerAdded.setMarker);
-emitter.on('addMarkerClick', markerAdded.setMarkerClick);
+
+var changeMarker = function (propName, propVal, propNameChange, propValNew, idNew) {
+    if (propNameChange === undefined) propNameChange = propName;
+    for (var item in markerListCurrent) {
+        var elem = markerListCurrent[item];
+        if (elem[propName] == propVal) {
+            if (idNew !== undefined) {
+                elem.id = setIdTime() + '_' + Math.floor(Math.random() * 128);
+                delete markerListCurrent[item];
+                markerListCurrent[elem.id] = elem;
+            }
+            elem[propNameChange] = propValNew;
+        }
+    }
+    return markerListCurrent;
+};
 
 var deleteMarker = function (propName, propVal) {
     for (var item in markerListCurrent) {
@@ -102,211 +123,77 @@ var deleteMarker = function (propName, propVal) {
     }
     return markerListCurrent;
 };
-emitter.on('deleteMarker', deleteMarker);
 
-var changeMarker = function (propName, propVal, markerArr, propNameChange, propValNew, idNew) {
-    if (propNameChange === undefined) propNameChange = propName;
-    for (var item in markerArr) {
-        var elem = markerArr[item];
-        if (elem[propName] == propVal) {
-            if (idNew !== undefined) elem.id = setIdTime() + '_' + Math.floor(Math.random() * 128);
-            elem[propNameChange] = propValNew;
-            markerArr[elem.id] = elem;
-        }
-    }
-    return markerArr;
-};
 //create marker for DB
-var getMarkerToDb = function (markerArr) {
-    var markerArrTemp = [];
-    for (var item in markerArr) {
-        if (markerArr.hasOwnProperty(item)) {
-            var elem = markerArr[item];
-            var markerToDb = {
-                id: elem.id
-                , position: {lat: elem.lat, lng: elem.lng}
-                , title: elem.nameInfo
-                , name: elem.nameInfo
-                , type: elem.typeInfo
-                , field: {
-                    comfortable: elem.comfortableInfo
-                    , square: elem.squareInfo
-                    , service: elem.serviceInfo
-                    , review: elem.reviewInfo
-                }
-            };
-            markerArrTemp[markerToDb.id] = markerToDb;
+var getMarkerToDb = function (marker) {
+    var markerToDb = {
+        id: marker.id
+        , position: {lat: marker.lat, lng: marker.lng}
+        , title: marker.nameInfo
+        , name: marker.nameInfo
+        , type: marker.typeInfo
+        , field: {
+            comfortable: marker.comfortableInfo
+            , square: marker.squareInfo
+            , service: marker.serviceInfo
+            , review: marker.reviewInfo
         }
-    }
-    return markerArrTemp
+    };
+    // console.log(markerToDb);
+    return markerToDb
 }
 
+markerListCurrent.__proto__.markerAdded = markerAdded;
 markerListCurrent.__proto__.changeMarker = changeMarker;
-markerListCurrent.__proto__.getMarkerToDb = getMarkerToDb;
+markerListCurrent.__proto__.deleteMarker = deleteMarker;
 
+
+emitter.emit('addMarker');
+emitter.on('addMarker1', function () {
+    console.log('addMarker1 working')
+});
 var res = Promise.resolve(markerListCurrent);
 res
     .then(function (markerListCurrent) {
-        emitter.emit('addMarker', {lat: 50.446246, lng: 30.520878}, 'The Little pony', 'Cafe', 'Amazing', '5', '42', '5');
-        emitter.emit('addMarker', {lat: 50.444534, lng: 30.516146}, 'Entertainment', 'Playground', 'Not bad', '4', '64', '2');
-        emitter.emit('addMarkerClick', 'Parents&kids', 'Playground', 'Cool', '5', '52', '4');
+        markerListCurrent.markerAdded.setMarker({lat: 50.446246, lng: 30.520878}, 'The Little pony', 'Cafe', 'Amazing', '5', '42', '5');
+        var markerToDb = getMarkerToDb(markerListCurrent.markerAdded.marker);
+        // console.log(markerToDb);
+        emitter.on('addMarker3', function(){
+            console.log(markerToDb);
+        });
+        markerListCurrent.markerAdded.setMarker({lat: 50.444534, lng: 30.516146}, 'Entertainment', 'Playground', 'Not bad', '4', '64', '2');
+        console.log(markerListCurrent);
+        markerListCurrent.markerAdded.setMarkerClick('Parents&kids', 'Playground', 'Cool', '5', '52', '4')
         console.log(markerListCurrent);
         return Promise.resolve(markerListCurrent)
     })
-    //     .then(function (markerListCurrent) {
-    //         emitter.emit('deleteMarker', 'title', 'Snacks', markerListCurrent)
-    //         console.log(markerListCurrent)
-    //         return Promise.resolve(markerListCurrent);
-    //     })
-    // .then(function (markerListCurrent) {
-    //     markerListCurrent.changeMarker('typeInfo', 'Pizzeria', markerListCurrent, undefined, 'Pizza Bar', null);
-    //     console.log(markerListCurrent);
-    //     return Promise.resolve(markerListCurrent);
-    // })
-    // .then(function(markerListCurrent){
-    //     var resArrToDb = markerListCurrent.getMarkerToDb(markerListCurrent);
-    //     console.log(resArrToDb);
-    //     return Promise.resolve(markerListCurrent);
-    // })
     .then(function (markerListCurrent) {
-        emitter.emit('addMarker', { lat: 50.447458, lng: 30.525717}, 'Varenik`s', 'Restaurant', 'Excellent', '5', '67', '5');
-        console.log(markerListCurrent)
-        return Promise.resolve(markerListCurrent)
-    })
-    .then(function (markerListCurrent) {
-        emitter.emit('deleteMarker', 'title', 'The Little pony');
-        // emitter.emit('deleteMarker', 'comfortableInfo', 5, markerListCurrent);
-        console.log(markerListCurrent)
+        markerListCurrent.deleteMarker('title','Snacks')
+        // console.log(markerListCurrent)
         return Promise.resolve(markerListCurrent);
     })
-    // .then(function(markerListCurrent){
-    //     var resultToDb = markerListCurrent.getMarkerToDb(markerListCurrent);
-    //     console.log(resultToDb)
-    //     return Promise.resolve(markerListCurrent);
+    .then(function (markerListCurrent) {
+        markerListCurrent.changeMarker('typeInfo', 'Pizzeria', undefined, 'Pizza Bar', null);
+        // console.log(markerListCurrent);
+        return Promise.resolve(markerListCurrent);
+    })
+    .then(function (markerListCurrent) {
+        markerListCurrent.changeMarker('typeInfo', 'Pizza Bar', 'reviewInfo', 'Extremely cool place', null);
+        // console.log(markerListCurrent);
+        return Promise.resolve(markerListCurrent);
+    })
+    // .then(function (markerListCurrent) {
+    //     markerListCurrent.markerAdded.setMarker({ lat: 50.447458, lng: 30.525717}, 'Varenik`s', 'Restaurant', 'Excellent', '5', '67', '5');
+    //     // console.log(markerListCurrent)
+    //     return Promise.resolve(markerListCurrent)
     // })
     .then(function (markerListCurrent) {
-        emitter.emit('addMarker', {lat: 50.446201, lng: 30.520288}, 'Kids', 'Kids area', 'Rather poorly', '2', '30', '3');
-        // emitter.emit('addMarkerClick', undefined, 'Parents&kids', 'Playground', 'Cool', '5', '52', '4');
-        console.log(markerListCurrent)
+        markerListCurrent.markerAdded.setMarker({lat: 50.446201, lng: 30.520288}, 'Kids', 'Kids area', 'Rather poorly', '2', '30', '3');
+        console.log(markerListCurrent);
         return Promise.resolve(markerListCurrent)
     })
-.then(function (markerListCurrent) {
-   emitter.emit('deleteMarker','title', 'Porter pub', markerListCurrent);
-    console.log(markerListCurrent)
-    return Promise.resolve(markerListCurrent);
-})
-// .then(function(markerListCurrent){
-//     var resultToDb = markerListCurrent.getMarkerToDb(markerListCurrent);
-//     console.log(resultToDb)
-// })
 
-module.exports.AddMarker = AddMarker;
+module.exports.markerAdded = markerAdded.setMarker;
 module.exports.changeMarker = changeMarker;
 module.exports.deleteMarker = deleteMarker;
-//
-//     return markerArr;
-// };
-// emitter.on('deleteMarker', deleteMarker);
-//
-// var changeMarker = function (propName, propVal, markerArr, propNameChange, propValNew, idNew) {
-//     if (propNameChange === undefined) propNameChange = propName;
-//     for(var item in markerArr) {
-//         var elem = markerArr[item];
-//         if (elem[propName] == propVal) {
-//             if(idNew !== undefined) elem.id = setIdTime() + '_' + Math.floor(Math.random() * 128);
-//             elem[propNameChange] = propValNew;
-//             markerArr[elem.id] = elem;
-//         }
-//     }
-//     return markerArr;
-// };
-// //create marker for DB
-// var getMarkerToDb = function (markerArr) {
-//     var markerArrTemp = [];
-//     for (var item in markerArr) {
-//         if(markerArr.hasOwnProperty(item)) {
-//             var elem = markerArr[item];
-//             var markerToDb = {
-//                 id: elem.id
-//                 , position: {lat: elem.lat, lng: elem.lng}
-//                 , title: elem.nameInfo
-//                 , name: elem.nameInfo
-//                 , type: elem.typeInfo
-//                 , field: {
-//                     comfortable: elem.comfortableInfo
-//                     , square: elem.squareInfo
-//                     , service: elem.serviceInfo
-//                     , review: elem.reviewInfo
-//                 }
-//             };
-//             markerArrTemp[markerToDb.id] = markerToDb;
-//         }
-//     }
-//     return markerArrTemp
-// }
-//
-//
-// markerListCurrent.__proto__.changeMarker = changeMarker;
-// markerListCurrent.__proto__.getMarkerToDb = getMarkerToDb;
 
-// var res = Promise.resolve(data);
-// res
-//     .then(function(markerListCurrent){
-//         emitter.emit('addMarker', {lat: 50.446246, lng: 30.520878}, 'The Little pony', 'Cafe', 'Amazing', '5', '42', '5');
-//         emitter.emit('addMarker', {lat: 50.444534, lng: 30.516146}, 'Entertainment', 'Playground', 'Not bad', '4', '64', '2');
-//         emitter.emit('addMarkerClick', undefined, 'Parents&kids', 'Playground', 'Cool', '5', '52', '4');
-//         console.log(markerListCurrent)
-//         return Promise.resolve(markerListCurrent)
-//     })
-//     .then(function (markerListCurrent) {
-//         emitter.emit('deleteMarker', 'title', 'Snacks', markerListCurrent)
-//         console.log(markerListCurrent)
-//         return Promise.resolve(markerListCurrent);
-//     })
-//     .then(function (markerListCurrent) {
-//         markerListCurrent.changeMarker('typeInfo', 'Pizzeria', markerListCurrent, undefined, 'Pizza Bar', null);
-//         console.log(markerListCurrent);
-//         return Promise.resolve(markerListCurrent);
-//     })
-//     .then(function(markerListCurrent){
-//         var resArrToDb = markerListCurrent.getMarkerToDb(markerListCurrent);
-//         console.log(resArrToDb);
-//         return Promise.resolve(markerListCurrent);
-//     })
-//     .then(function(markerListCurrent){
-//         emitter.emit('addMarker', {lat: 50.447458, lng: 30.525717}, 'Varenik`s', 'Restaurant', 'Excellent', '5', '67', '5');
-//         console.log(markerListCurrent)
-//         return Promise.resolve(markerListCurrent)
-//     })
-//     .then(function (markerListCurrent) {
-//         emitter.emit('deleteMarker', 'title', 'The Little pony', markerListCurrent)
-//         // emitter.emit('deleteMarker','title', 'Entertainment', markerListCurrent);
-//         // emitter.emit('deleteMarker', 'comfortableInfo', 5, markerListCurrent);
-//         console.log(markerListCurrent)
-//         return Promise.resolve(markerListCurrent);
-//     })
-//     .then(function(markerListCurrent){
-//         var resultToDb = markerListCurrent.getMarkerToDb(markerListCurrent);
-//         console.log(resultToDb)
-//         return Promise.resolve(markerListCurrent);
-//     })
-//     .then(function(markerListCurrent){
-//         emitter.emit('addMarker', {lat: 50.446201, lng: 30.520288}, 'Kids', 'Kids area', 'Rather poorly', '2', '30', '3');
-//         emitter.emit('addMarkerClick', undefined, 'Parents&kids', 'Playground', 'Cool', '5', '52', '4');
-//         console.log(markerListCurrent)
-//         return Promise.resolve(markerListCurrent)
-//     })
-//     .then(function (markerListCurrent) {
-//         emitter.emit('deleteMarker', 'title', 'The best pizza', markerListCurrent)
-//         emitter.emit('deleteMarker','title', 'Porter pub', markerListCurrent);
-//         console.log(markerListCurrent)
-//         return Promise.resolve(markerListCurrent);
-//     })
-//     .then(function(markerListCurrent){
-//         var resultToDb = markerListCurrent.getMarkerToDb(markerListCurrent);
-//         console.log(resultToDb)
-//     })
-
-// module.exports.AddMarker = AddMarker;
-// module.exports.changeMarker = changeMarker;
-// module.exports.deleteMarker = deleteMarker;

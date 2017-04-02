@@ -1,4 +1,6 @@
 'use strict';
 
-module.exports = require('component-emitter');
+var Emitter = require('component-emitter');
+var emitter = new Emitter;
+module.exports.emitter = emitter;
 require('./map');
