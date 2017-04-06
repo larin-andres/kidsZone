@@ -1,7 +1,7 @@
 // require('./SetMap');
 // require('./ShowMarker');
 require('./MapComponents');
-require('./UpdateMarkerCtrl');
+require('./MapCtrl');
 // require('./MapComponents');
 // require('./MaxMap');
 

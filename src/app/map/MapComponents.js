@@ -4,7 +4,7 @@ var markerTmpl = require('./_marker_common.jade');
 var infoWind = require('./ShowMarkers').infoWind;
 var markerListCurrent = require('./ShowMarkers').markerListCurrent;
 
-var emitter = require('../index').emitter;
+var emitter = require('./MapCtrl').emitter;
 
 //generate mark time
 var setIdTime = function () {
@@ -68,7 +68,7 @@ AddMarker = function () {
                 , reviewInfo: review
             });
             var createInfoWind = function () {
-                marker.addListener('click', function() {
+                marker.addListener('click', function () {
                     infoWind.setContent(markerTmpl({
                         name: this.nameInfo
                         , type: this.typeInfo
@@ -84,17 +84,11 @@ AddMarker = function () {
             };
             createInfoWind();
             marker.setMap(map);
-
-            //send marker to DB
-            // emitter.on('addMarker', getMarkerToDb(marker));
-            emitter.on('addMarker2', function(){
-                console.log('em work');
-            });
-
             markerListCurrent[marker.id] = marker;
+            // console.log(markerListCurrent);
         })
-        return markerListCurrent;
     }
+
 }
 var markerAdded = new AddMarker();
 
@@ -148,50 +142,54 @@ markerListCurrent.__proto__.changeMarker = changeMarker;
 markerListCurrent.__proto__.deleteMarker = deleteMarker;
 
 
-emitter.emit('addMarker');
-emitter.on('addMarker1', function () {
-    console.log('addMarker1 working')
-});
+emitter.emit('addNewMarker');
+
 var res = Promise.resolve(markerListCurrent);
 res
     .then(function (markerListCurrent) {
         markerListCurrent.markerAdded.setMarker({lat: 50.446246, lng: 30.520878}, 'The Little pony', 'Cafe', 'Amazing', '5', '42', '5');
         var markerToDb = getMarkerToDb(markerListCurrent.markerAdded.marker);
         // console.log(markerToDb);
-        emitter.on('addMarker3', function(){
-            console.log(markerToDb);
-        });
+        // emitter.on('addMarker3', function(){
+        //     console.log(markerToDb);
+        // });
         markerListCurrent.markerAdded.setMarker({lat: 50.444534, lng: 30.516146}, 'Entertainment', 'Playground', 'Not bad', '4', '64', '2');
         console.log(markerListCurrent);
-        markerListCurrent.markerAdded.setMarkerClick('Parents&kids', 'Playground', 'Cool', '5', '52', '4')
-        console.log(markerListCurrent);
         return Promise.resolve(markerListCurrent)
     })
-    .then(function (markerListCurrent) {
-        markerListCurrent.deleteMarker('title','Snacks')
-        // console.log(markerListCurrent)
-        return Promise.resolve(markerListCurrent);
+    .then(function(markerListCurrent){
+        markerListCurrent.markerAdded.setMarkerClick('Parents&kids', 'Playground', 'Cool', '5', '52', '4')
+        return Promise.resolve(markerListCurrent)
     })
-    .then(function (markerListCurrent) {
-        markerListCurrent.changeMarker('typeInfo', 'Pizzeria', undefined, 'Pizza Bar', null);
-        // console.log(markerListCurrent);
-        return Promise.resolve(markerListCurrent);
-    })
-    .then(function (markerListCurrent) {
-        markerListCurrent.changeMarker('typeInfo', 'Pizza Bar', 'reviewInfo', 'Extremely cool place', null);
-        // console.log(markerListCurrent);
-        return Promise.resolve(markerListCurrent);
+    .then(function(markerListCurrent){
+        console.log(markerListCurrent)
+        return Promise.resolve(markerListCurrent)
     })
     // .then(function (markerListCurrent) {
-    //     markerListCurrent.markerAdded.setMarker({ lat: 50.447458, lng: 30.525717}, 'Varenik`s', 'Restaurant', 'Excellent', '5', '67', '5');
+    //     markerListCurrent.deleteMarker('title','Snacks')
     //     // console.log(markerListCurrent)
+    //     return Promise.resolve(markerListCurrent);
+    // })
+    // .then(function (markerListCurrent) {
+    //     markerListCurrent.changeMarker('typeInfo', 'Pizzeria', undefined, 'Pizza Bar', null);
+    //     // console.log(markerListCurrent);
+    //     return Promise.resolve(markerListCurrent);
+    // })
+    // .then(function (markerListCurrent) {
+    //     markerListCurrent.changeMarker('typeInfo', 'Pizza Bar', 'reviewInfo', 'Extremely cool place', null);
+    //     // console.log(markerListCurrent);
+    //     return Promise.resolve(markerListCurrent);
+    // })
+    // // .then(function (markerListCurrent) {
+    // //     markerListCurrent.markerAdded.setMarker({ lat: 50.447458, lng: 30.525717}, 'Varenik`s', 'Restaurant', 'Excellent', '5', '67', '5');
+    // //     // console.log(markerListCurrent)
+    // //     return Promise.resolve(markerListCurrent)
+    // // })
+    // .then(function (markerListCurrent) {
+    //     markerListCurrent.markerAdded.setMarker({lat: 50.446201, lng: 30.520288}, 'Kids', 'Kids area', 'Rather poorly', '2', '30', '3');
+    //     console.log(markerListCurrent);
     //     return Promise.resolve(markerListCurrent)
     // })
-    .then(function (markerListCurrent) {
-        markerListCurrent.markerAdded.setMarker({lat: 50.446201, lng: 30.520288}, 'Kids', 'Kids area', 'Rather poorly', '2', '30', '3');
-        console.log(markerListCurrent);
-        return Promise.resolve(markerListCurrent)
-    })
 
 module.exports.markerAdded = markerAdded.setMarker;
 module.exports.changeMarker = changeMarker;

@@ -44,6 +44,7 @@
     "webpack-stream": "^3.2.0"
   },
   "dependencies": {
-    "angular-ui-router": "^0.3.2"
+    "angular-ui-router": "^0.3.2",
+    "component-emitter": "^1.2.1"
   }
 }
